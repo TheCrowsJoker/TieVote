@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/5.7.1/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/5.7.1/firebase-firestore.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/5.7.1/firebase-auth.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/5.7.1/firebase-database.js"></script>
+        <script>
+            // Initialize Firebase
+            var config = {
+                apiKey: "AIzaSyAXODwQfQsMxLyITKJDLwOHjA3Lrlt2MHw",
+                authDomain: "tievote-50817.firebaseapp.com",
+                databaseURL: "https://tievote-50817.firebaseio.com",
+                projectId: "tievote-50817",
+                storageBucket: "tievote-50817.appspot.com",
+                messagingSenderId: "827337211359"
+            };
+            firebase.initializeApp(config);
+        </script>
+        <script type="text/javascript" src="js/vote.js"></script>
+        <title>Tie Vote</title>
+    </head>
+    <body>
+        <div>
+            <label id="vote1label" for="vote1">Tie 1</label>
+            <input type="checkbox" name="vote1" id="vote1" value="">
+            <label id="vote2label" for="vote2">Tie 2</label>
+            <input type="checkbox" name="vote2" id="vote2" value="">
+            <button>Vote</button>
+        </div>
+    </body>
+</html>
