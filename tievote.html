@@ -2,7 +2,6 @@
 <html lang="en" dir="ltr">
     <head>
         <meta charset="utf-8">
-        <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
         <script src="https://www.gstatic.com/firebasejs/5.7.1/firebase-app.js"></script>
         <script src="https://www.gstatic.com/firebasejs/5.7.1/firebase-firestore.js"></script>
         <script src="https://www.gstatic.com/firebasejs/5.7.1/firebase-auth.js"></script>
@@ -20,15 +19,22 @@
             firebase.initializeApp(config);
         </script>
         <script type="text/javascript" src="js/vote.js"></script>
+        <link rel="stylesheet" href="styles/styles.css">
         <title>Tie Vote</title>
     </head>
     <body>
         <div>
             <form>
-                <label id="vote1label" for="vote1">Tie 1</label>
-                <input type="radio" name="votes" id="vote1" value="">
-                <label id="vote2label" for="vote2">Tie 2</label>
-                <input type="radio" name="votes" id="vote2" value="">
+                <div>
+                    <label id="vote1label" for="vote1">Tie 1</label>
+                    <input type="radio" name="votes" id="vote1" value="">
+                    <p id="FirstTieVotes">Votes: </p>
+                </div>
+                <div>
+                    <label id="vote2label" for="vote2">Tie 2</label>
+                    <input type="radio" name="votes" id="vote2" value="">
+                    <p id="SecondTieVotes">Votes: </p>
+                </div>
                 <button type="submit" id="voteButton">Vote</button>
             </form>
         </div>

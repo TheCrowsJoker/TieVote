@@ -1,4 +1,4 @@
-$(document).ready(function() {
+window.onload = function() {
     var db = firebase.firestore();
     var ties = [];
 
@@ -17,6 +17,9 @@ $(document).ready(function() {
     .then(function() {
         selectTie();
     });
+
+    showVotes("FirstTie");
+    showVotes("SecondTie");
 
     function selectTie() {
         // Pick the first tie randomly
@@ -78,13 +81,14 @@ $(document).ready(function() {
                 return votes;
             })
             .then(function(votes) {
-                console.log(tie, "Votes ", votes);
+                console.log(tie, "Votes", votes);
             }).catch(function(error) {
                 console.error(error);
             });
         });
     }
 
+    // Handle voting
     document.getElementById("voteButton").onclick = function(event) {
         event.preventDefault();
         if (document.getElementById("vote1").checked) {
@@ -95,4 +99,15 @@ $(document).ready(function() {
             console.log("Incorrect selection");
         }
     };
-});
+
+    function showVotes(docRef) {
+        db.collection("TieVote").doc(docRef)
+        .onSnapshot(function(doc) {
+            console.log("First tie votes: ", doc.data().votes);
+            var votes = doc.data().votes;
+            var text = "Votes: " + votes;
+            var selector = docRef + "Votes";
+            document.getElementById(selector).innerText=text;
+        });
+    }
+};
