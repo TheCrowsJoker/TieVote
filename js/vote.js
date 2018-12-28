@@ -8,25 +8,15 @@ $(document).ready(function() {
     const settings = {timestampsInSnapshots: true};
     firestore.settings(settings);
 
-    readAll();
-
-    function readAll() {
-        db.collection("AllTies").get()
-        .then(function(querySnapshot) {
-            querySnapshot.forEach(function(doc) {
-                ties.push(doc.data().name);
-            });
-        })
-        .then(function() {
-            console.log("Before selection: ", ties);                            // Remove when done
-        })
-        .then(function() {
-            selectTie();
-        })
-        .then(function() {
-            console.log("After selection:", ties);                              // Remove when done
+    db.collection("AllTies").get()
+    .then(function(querySnapshot) {
+        querySnapshot.forEach(function(doc) {
+            ties.push(doc.data().name);
         });
-    }
+    })
+    .then(function() {
+        selectTie();
+    });
 
     function selectTie() {
         // Pick the first tie randomly
@@ -75,37 +65,34 @@ $(document).ready(function() {
         })
         .catch(function(error) {
             console.error("Error writing document: ", error);
-        })
-        .then(function() {
-            var doc = "FirstTie";
-            var votes = getVotes(doc);
-            console.log(votes);
-            return doc, votes;
-            // setVotes(doc, votes);
-        })
-        .then(function() {
-            setVotes(doc, votes);
         });
     }
 
-    function getVotes(doc) {
-        db.collection("TieVote").doc(doc).get()
-        .then(function(doc) {
-            var tieVotes = doc.data().votes;
-            console.log("Votes: ", tieVotes);                                   // Remove when done
-            return tieVotes;
+    function updateVotes(tie) {
+        var docRef = db.collection("TieVote").doc(tie);
+
+        db.runTransaction(function(transaction) {
+            return transaction.get(docRef).then(function(doc) {
+                var votes = doc.data().votes + 1;
+                transaction.update(docRef, {votes: votes});
+                return votes;
+            })
+            .then(function(votes) {
+                console.log(tie, "Votes ", votes);
+            }).catch(function(error) {
+                console.error(error);
+            });
         });
     }
 
-    function setVotes(doc, votes) {
-        db.collection("TieVote").doc(doc).update({
-            votes: votes
-        })
-        .then(function() {                                                      // Remove when done
-            console.log("Votes successfully written!");
-        })
-        .catch(function(error) {
-            console.error("Error writing document: ", error);
-        });
-    }
+    document.getElementById("voteButton").onclick = function(event) {
+        event.preventDefault();
+        if (document.getElementById("vote1").checked) {
+            updateVotes("FirstTie");
+        } else if (document.getElementById("vote2").checked) {
+            updateVotes("SecondTie");
+        } else {
+            console.log("Incorrect selection");
+        }
+    };
 });
