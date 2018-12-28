@@ -8,15 +8,22 @@ window.onload = function() {
     const settings = {timestampsInSnapshots: true};
     firestore.settings(settings);
 
-    db.collection("AllTies").get()
-    .then(function(querySnapshot) {
-        querySnapshot.forEach(function(doc) {
-            ties.push(doc.data().name);
+    function setup() {
+        db.collection("AllTies").get()
+        .then(function(querySnapshot) {
+            querySnapshot.forEach(function(doc) {
+                ties.push(doc.data().name);
+            });
+        })
+        .then(function() {
+            selectTie();
+        })
+        .then(function() {
+            setFirebaseDate();
         });
-    })
-    .then(function() {
-        selectTie();
-    });
+    }
+
+    setup();
 
     showVotes("FirstTie");
     showVotes("SecondTie");
@@ -71,6 +78,20 @@ window.onload = function() {
         });
     }
 
+    function setFirebaseDate() {
+        var date = new Date();
+        date.setHours(0,0,0,0);
+        db.collection("TieVote").doc("NewTie").set({
+            time: new Date(date.getTime() + 7 * 24 * 60 * 60 * 1000)
+        })
+        .then(function() {                                                      // Remove when done
+            console.log("Time successfully written!");
+        })
+        .catch(function(error) {
+            console.error("Error writing document: ", error);
+        });
+    }
+
     function updateVotes(tie) {
         var docRef = db.collection("TieVote").doc(tie);
 
@@ -103,11 +124,44 @@ window.onload = function() {
     function showVotes(docRef) {
         db.collection("TieVote").doc(docRef)
         .onSnapshot(function(doc) {
-            console.log("First tie votes: ", doc.data().votes);
             var votes = doc.data().votes;
             var text = "Votes: " + votes;
             var selector = docRef + "Votes";
             document.getElementById(selector).innerText=text;
         });
     }
+
+    function getFirebaseTime() {
+        db.collection("TieVote").doc("NewTie").get()
+        .then(function(doc) {
+            nextDate = doc.data().time.seconds;
+            return nextDate;
+        })
+        .then(function(nextDate) {
+            checkTimeRemaining(nextDate);
+        });
+    }
+
+    function checkTimeRemaining() {
+        var today = Date.parse(moment()) / 1000;
+        if (nextDate > today) {
+            var timeToReset = nextDate - today;
+            var seconds = timeToReset;
+            seconds = parseInt(seconds)
+            var time =  Math.floor(moment.duration(seconds,'seconds').asDays()) + ' days, ' +
+                                     moment.duration(seconds,'seconds').hours() + ' hours, ' +
+                                     moment.duration(seconds,'seconds').minutes() + ' minutes, ' +
+                                     moment.duration(seconds,'seconds').seconds() + ' seconds';
+
+            document.getElementById("timeToReset").innerText=time;
+            setTimeout(checkTimeRemaining, 1000);
+        } else if (nextDate <= today) {
+            setup();
+        } else {
+            console.log("Date error");
+        }
+    }
+
+    var nextDate;
+    getFirebaseTime();
 };
