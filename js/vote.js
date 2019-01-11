@@ -4,15 +4,20 @@ window.onload = function() {
 
     // The date data format is going to change in Firebase, these lines
     // are to ensure this app doesnt break
-    const firestore = firebase.firestore();
     const settings = {timestampsInSnapshots: true};
-    firestore.settings(settings);
+    db.settings(settings);
+
+    function radioSelected() {
+        if (document.getElementById('vote1').checked) {
+            alert("ha");
+        }
+    }
 
     function setup() {
         db.collection("AllTies").get()
         .then(function(querySnapshot) {
             querySnapshot.forEach(function(doc) {
-                ties.push(doc.data().name);
+                ties.push(doc.data());
             });
         })
         .then(function() {
@@ -42,9 +47,20 @@ window.onload = function() {
         var tie2 = ties[Math.floor(Math.random()*ties.length)];
 
         // Update the labels and values of the ties
-        document.getElementById('vote1label').innerText=tie1;
+        var vote1label = document.getElementById('vote1label');
+
+        vote1label.getElementsByTagName('h2')[0].innerHTML=tie1.name;
+        vote1label.getElementsByTagName('img')[0].src=tie1.picURL;
+        vote1label.getElementsByClassName('enlargeImage')[0].href=tie1.picURL;
+        vote1label.getElementsByClassName('tutorial')[0].href=tie1.tutorialURL;
         document.getElementById('vote1').value=tie1;
-        document.getElementById('vote2label').innerText=tie2;
+
+        var vote2label = document.getElementById('vote2label');
+
+        vote2label.getElementsByTagName('h2')[0].innerHTML=tie2.name;
+        vote2label.getElementsByTagName('img')[0].src=tie2.picURL;
+        vote2label.getElementsByClassName('enlargeImage')[0].href=tie2.picURL;
+        vote2label.getElementsByClassName('tutorial')[0].href=tie2.tutorialURL;
         document.getElementById('vote2').value=tie2;
 
         // Set selected ties in firebase
@@ -162,6 +178,12 @@ window.onload = function() {
         }
     }
 
+    if (document.getElementById('vote1').checked) {
+        alert("test");
+    }
+
     var nextDate;
     getFirebaseTime();
+
+
 };

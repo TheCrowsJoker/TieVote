@@ -24,23 +24,72 @@
         <title>Tie Vote</title>
     </head>
     <body>
-        <div id="timeToReset">
-            0 days, 0 hours, 0 minutes, 0 seconds
-        </div>
-        <div>
-            <form>
-                <div>
-                    <label id="vote1label" for="vote1">Tie 1</label>
-                    <input type="radio" name="votes" id="vote1" value="">
-                    <p id="FirstTieVotes">Votes: </p>
+        <div class="main">
+            <header>
+                <div class="title">
+                    <h1>Vote for a tie</h1>
                 </div>
-                <div>
-                    <label id="vote2label" for="vote2">Tie 2</label>
-                    <input type="radio" name="votes" id="vote2" value="">
-                    <p id="SecondTieVotes">Votes: </p>
+                <div class="time">
+                    <strong>Time left to vote: </strong>
+                    <span id="timeToReset">
+                        0 days, 0 hours, 0 minutes, 0 seconds
+                    </span>
                 </div>
-                <button type="submit" id="voteButton">Vote</button>
-            </form>
+            </header>
+            <div class="ties">
+                <form>
+                    <div class="tie">
+                        <label id="vote1label" for="vote1">
+                            <div>
+                                <h2 class="tie-title">Tie 1</h2>
+                            </div>
+                            <img src="https://via.placeholder.com/180x320" />
+                            <div class="tie-body">
+                                <ul>
+                                    <li><a class="enlargeImage" href="#" target="_blank" rel="noopener noreferrer">Enlarge Image</a></li>
+                                    <li><a class="tutorial" href="#" target="_blank" rel="noopener noreferrer">Tutorial</a></li>
+                                </ul>
+                                <input type="radio" name="votes" id="vote1" value="" onclick="radioSelected()">
+                                <p id="FirstTieVotes">Votes: 0</p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="tie">
+                        <label id="vote2label" for="vote2">
+                            <div>
+                                <h2 class="tie-title">Tie 2</h2>
+                            </div>
+                            <img src="https://via.placeholder.com/180x320" />
+                            <div class="tie-body">
+                                <ul>
+                                    <li><a class="enlargeImage" href="#" target="_blank" rel="noopener noreferrer">Enlarge Image</a></li>
+                                    <li><a class="tutorial" href="#" target="_blank" rel="noopener noreferrer">Tutorial</a></li>
+                                </ul>
+                                <input type="radio" name="votes" id="vote2" value="" onclick="radioSelected()">
+                                <p id="SecondTieVotes">Votes: </p>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="instructions">
+                        Click on a tie to select it and then click on <strong>Vote</strong>
+                    </div>
+                    <div class="submit">
+                        <button type="submit" id="voteButton">Vote</button>
+                    </div>
+                </form>
+            </div>
         </div>
+        <script>
+        // Add a selected class to the tie that was selected
+            function radioSelected() {
+                if (document.getElementById('vote1').checked) {
+                    document.getElementById('vote2').closest('.tie').classList.remove('selected');
+                    document.getElementById('vote1').closest('.tie').classList.add('selected');
+                } else if (document.getElementById('vote2').checked) {
+                    document.getElementById('vote1').closest('.tie').classList.remove('selected');
+                    document.getElementById('vote2').closest('.tie').classList.add('selected');
+                }
+            }
+        </script>
     </body>
 </html>
