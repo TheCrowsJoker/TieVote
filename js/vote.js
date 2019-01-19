@@ -7,11 +7,15 @@ window.onload = function() {
     const settings = {timestampsInSnapshots: true};
     db.settings(settings);
 
-    function radioSelected() {
-        if (document.getElementById('vote1').checked) {
-            alert("ha");
-        }
-    }
+
+    setup();
+
+    showVotes("FirstTie");
+    showVotes("SecondTie");
+
+    // *********
+    // FUNCTIONS
+    // *********
 
     function setup() {
         db.collection("AllTies").get()
@@ -25,17 +29,17 @@ window.onload = function() {
         })
         .then(function() {
             setFirebaseDate();
+            var nextDate;
+            getFirebaseTime(true);
         });
     }
 
-    setup();
-
-    showVotes("FirstTie");
-    showVotes("SecondTie");
-
     function selectTie() {
+        var tie1, tie2;
+        // // TODO: check to see if ties need to be set
+
         // Pick the first tie randomly
-        var tie1 = ties[Math.floor(Math.random()*ties.length)];
+        tie1 = ties[Math.floor(Math.random()*ties.length)];
 
         // Prevent the same tie being selected twice
         var index = ties.indexOf(tie1)
@@ -44,7 +48,10 @@ window.onload = function() {
         }
 
         // Pick the second tie
-        var tie2 = ties[Math.floor(Math.random()*ties.length)];
+        tie2 = ties[Math.floor(Math.random()*ties.length)];
+
+        // Set selected ties in firebase
+        setTies(tie1, tie2);
 
         // Update the labels and values of the ties
         var vote1label = document.getElementById('vote1label');
@@ -62,9 +69,6 @@ window.onload = function() {
         vote2label.getElementsByClassName('enlargeImage')[0].href=tie2.picURL;
         vote2label.getElementsByClassName('tutorial')[0].href=tie2.tutorialURL;
         document.getElementById('vote2').value=tie2;
-
-        // Set selected ties in firebase
-        setTies(tie1, tie2);
     }
 
     function setTies(tie1, tie2) {
@@ -95,10 +99,28 @@ window.onload = function() {
     }
 
     function setFirebaseDate() {
-        var date = new Date();
-        date.setHours(0,0,0,0);
+        const dayINeed = 5; // for Friday
+        const today = moment().isoWeekday();
+        var date;
+
+        // if we haven't yet passed the day of the week that I need:
+        if (today <= dayINeed) {
+            // then just give me this week's instance of that day
+            date = moment().isoWeekday(dayINeed);
+        } else {
+            // otherwise, give me *next week's* instance of that same day
+            date = moment().add(1, 'weeks').isoWeekday(dayINeed);
+        }
+
+        date.set({
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0
+        });
+
         db.collection("TieVote").doc("NewTie").set({
-            time: new Date(date.getTime() + 7 * 24 * 60 * 60 * 1000)
+            time: new Date(date)
         })
         .then(function() {                                                      // Remove when done
             console.log("Time successfully written!");
@@ -125,18 +147,6 @@ window.onload = function() {
         });
     }
 
-    // Handle voting
-    document.getElementById("voteButton").onclick = function(event) {
-        event.preventDefault();
-        if (document.getElementById("vote1").checked) {
-            updateVotes("FirstTie");
-        } else if (document.getElementById("vote2").checked) {
-            updateVotes("SecondTie");
-        } else {
-            console.log("Incorrect selection");
-        }
-    };
-
     function showVotes(docRef) {
         db.collection("TieVote").doc(docRef)
         .onSnapshot(function(doc) {
@@ -147,14 +157,16 @@ window.onload = function() {
         });
     }
 
-    function getFirebaseTime() {
+    async function getFirebaseTime(updateText = false) {
         db.collection("TieVote").doc("NewTie").get()
         .then(function(doc) {
             nextDate = doc.data().time.seconds;
             return nextDate;
         })
         .then(function(nextDate) {
-            checkTimeRemaining(nextDate);
+            if (updateText) {
+                checkTimeRemaining(nextDate);
+            }
         });
     }
 
@@ -171,19 +183,20 @@ window.onload = function() {
 
             document.getElementById("timeToReset").innerText=time;
             setTimeout(checkTimeRemaining, 1000);
-        } else if (nextDate <= today) {
-            setup();
-        } else {
+        }  else {
             console.log("Date error");
         }
     }
 
-    if (document.getElementById('vote1').checked) {
-        alert("test");
-    }
-
-    var nextDate;
-    getFirebaseTime();
-
-
+    // Handle voting
+    document.getElementById("voteButton").onclick = function(event) {
+        event.preventDefault();
+        if (document.getElementById("vote1").checked) {
+            updateVotes("FirstTie");
+        } else if (document.getElementById("vote2").checked) {
+            updateVotes("SecondTie");
+        } else {
+            console.log("Incorrect selection");
+        }
+    };
 };
