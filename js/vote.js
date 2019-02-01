@@ -1,6 +1,7 @@
 window.onload = function() {
     var db = firebase.firestore();
     var ties = [];
+    let nextDate = 0;
 
     // The date data format is going to change in Firebase, these lines
     // are to ensure this app doesnt break
@@ -17,21 +18,14 @@ window.onload = function() {
     // FUNCTIONS
     // *********
 
-    function setup() {
-        db.collection("AllTies").get()
-        .then(function(querySnapshot) {
-            querySnapshot.forEach(function(doc) {
-                ties.push(doc.data());
-            });
-        })
-        .then(function() {
-            selectTie();
-        })
-        .then(function() {
-            setFirebaseDate();
-            var nextDate;
-            getFirebaseTime(true);
+    async function setup() {
+        const querySnapshot = await db.collection("AllTies").get();
+        querySnapshot.forEach(function (doc) {
+            ties.push(doc.data());
         });
+        selectTie();
+        await setFirebaseDate();
+        getFirebaseTime(true);
     }
 
     function selectTie() {
@@ -51,7 +45,10 @@ window.onload = function() {
         tie2 = ties[Math.floor(Math.random()*ties.length)];
 
         // Set selected ties in firebase
-        setTies(tie1, tie2);
+        // (Don't need to "await" for these to finish, because we're using
+        // onSnapshot() to do updates when they finish)
+        setTie("FirstTie", tie1);
+        setTie("SecondTie", tie2);
 
         // Update the labels and values of the ties
         var vote1label = document.getElementById('vote1label');
@@ -71,34 +68,33 @@ window.onload = function() {
         document.getElementById('vote2').value=tie2;
     }
 
-    function setTies(tie1, tie2) {
-        // Could probably be done in a loop but this was easier
-        // First tie
-        db.collection("TieVote").doc("FirstTie").set({
-            name: tie1,
-            votes: 0
-        })
-        .then(function() {                                                      // Remove when done
-            console.log("First tie successfully written!");
-        })
-        .catch(function(error) {
-            console.error("Error writing document: ", error);
-        });
-
-        // Second tie
-        db.collection("TieVote").doc("SecondTie").set({
-            name: tie2,
-            votes: 0
-        })
-        .then(function() {                                                      // Remove when done
-            console.log("Second tie successfully written!");
-        })
-        .catch(function(error) {
-            console.error("Error writing document: ", error);
-        });
+    /**
+     *
+     * @param {string} tiePath The documentPath for one of the tie vote counts
+     * @param {string} tieName The name of the tie at that path
+     * @return {Promise}
+     */
+    async function setTie(tiePath, tieName) {
+        try {
+            // Could probably be done in a loop but this was easier
+            // First tie
+            await db
+                .collection("TieVote")
+                .doc(tiePath)
+                .set({
+                    name: tieName,
+                    votes: 0
+                });
+            console.log(`${tiePath} successfully written!`);
+        } catch (error) {
+            console.error(`Error writing ${tiePath}: ${tieName}`, error);
+        }
     }
 
-    function setFirebaseDate() {
+    /**
+     * Set the date of the next fancy tie Friday, in the DB
+     */
+    async function setFirebaseDate() {
         const dayINeed = 5; // for Friday
         const today = moment().isoWeekday();
         var date;
@@ -119,31 +115,35 @@ window.onload = function() {
             millisecond: 0
         });
 
-        db.collection("TieVote").doc("NewTie").set({
-            time: new Date(date)
-        })
-        .then(function() {                                                      // Remove when done
+        try {
+            await db
+                .collection("TieVote")
+                .doc("NewTie")
+                .set({
+                    time: new Date(date)
+                });
             console.log("Time successfully written!");
-        })
-        .catch(function(error) {
+        } catch (error) {
             console.error("Error writing document: ", error);
-        });
+        }
     }
 
-    function updateVotes(tie) {
-        var docRef = db.collection("TieVote").doc(tie);
+    /**
+     *
+     * @param {string} tiePath The documentPath for one of the ties' vote counts
+     */
+    function updateVotes(tiePath) {
+        var docRef = db.collection("TieVote").doc(tiePath);
 
-        db.runTransaction(function(transaction) {
-            return transaction.get(docRef).then(function(doc) {
+        db.runTransaction(async function (transaction) {
+            try {
+                const doc = await transaction.get(docRef);
                 var votes = doc.data().votes + 1;
-                transaction.update(docRef, {votes: votes});
-                return votes;
-            })
-            .then(function(votes) {
-                console.log(tie, "Votes", votes);
-            }).catch(function(error) {
+                transaction.update(docRef, { votes: votes });
+                console.log(tiePath, "Votes", votes);
+            } catch (error) {
                 console.error(error);
-            });
+            }
         });
     }
 
@@ -158,16 +158,15 @@ window.onload = function() {
     }
 
     async function getFirebaseTime(updateText = false) {
-        db.collection("TieVote").doc("NewTie").get()
-        .then(function(doc) {
-            nextDate = doc.data().time.seconds;
-            return nextDate;
-        })
-        .then(function(nextDate) {
-            if (updateText) {
-                checkTimeRemaining(nextDate);
-            }
-        });
+        const doc = await db
+            .collection("TieVote")
+            .doc("NewTie")
+            .get();
+
+        nextDate = doc.data().time.seconds;
+        if (updateText) {
+            checkTimeRemaining();
+        }
     }
 
     function checkTimeRemaining() {
