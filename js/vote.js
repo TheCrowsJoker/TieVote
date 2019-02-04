@@ -59,8 +59,8 @@ window.onload = function () {
                 db.collection("TieVote").doc("FirstTie").get(),
                 db.collection("TieVote").doc("SecondTie").get(),
             ]);
-            tie1 = tie1Data.data().name;
-            tie2 = tie2Data.data().name;
+            tie1 = tie1Data.data();
+            tie2 = tie2Data.data();
         }
 
 
@@ -85,10 +85,10 @@ window.onload = function () {
     /**
      *
      * @param {string} tiePath The documentPath for one of the tie vote counts
-     * @param {string} tieName The name of the tie at that path
+     * @param {string} tieData The name of the tie at that path
      * @return {Promise}
      */
-    async function setTie(tiePath, tieName) {
+    async function setTie(tiePath, tieData) {
         try {
             // Could probably be done in a loop but this was easier
             // First tie
@@ -96,12 +96,12 @@ window.onload = function () {
                 .collection("TieVote")
                 .doc(tiePath)
                 .set({
-                    name: tieName,
+                    ...tieData,
                     votes: 0
                 });
             console.log(`${tiePath} successfully written!`);
         } catch (error) {
-            console.error(`Error writing ${tiePath}: ${tieName}`, error);
+            console.error(`Error writing ${tiePath}: ${tieData.name}`, error);
         }
     }
 
